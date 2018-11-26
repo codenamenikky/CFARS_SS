@@ -100,7 +100,16 @@ def get_representative_TI(inputdata):
     representative_TI.columns = ['RSD_TI_mean','RSD_TI_std','RSD_TI_rep','Ref_TI_mean','Ref_TI_std','Ref_TI_rep','Ane2_TI_mean','Ane2_TI_std','Ane2_TI_rep']
     return representative_TI
 
-
+def get_count_per_WSbin(inputdata, column):
+    # Count per wind speed bin
+    inputdata = inputdata[(inputdata['bins_p5'].astype(float)>1.5) & (inputdata['bins_p5'].astype(float)<21)]  
+    resultsstats_bin = inputdata[[column,'bins']].groupby(by = 'bins').agg(['count'])
+    resultsstats_bin_p5 = inputdata[[column,'bins_p5']].groupby(by = 'bins_p5').agg(['count'])
+    resultsstats_bin = pd.DataFrame(resultsstats_bin.unstack()).T
+    resultsstats_bin.index = [column]
+    resultsstats_bin_p5 = pd.DataFrame(resultsstats_bin_p5.unstack()).T
+    resultsstats_bin_p5.index = [column]
+    return resultsstats_bin, resultsstats_bin_p5 
 def get_stats_per_WSbin(inputdata, column):
     # this will be used as a base function for all frequency agg caliculaitons for each bin to get the stats per wind speed bins
     inputdata = inputdata[(inputdata['bins_p5'].astype(float)>1.5) & (inputdata['bins_p5'].astype(float)<21)]  
@@ -216,11 +225,15 @@ def write_resultstofile(df,ws, r_start,c_start):
         for c_idx, value in enumerate(row, c_start):
             ws.cell(row=r_idx, column=c_idx, value=value)
     
-def write_all_resultstofile(reg_results, TI_MBE_j_,TI_Diff_j_, rep_TI_results, TIbybin, filename):
+def write_all_resultstofile(reg_results, TI_MBE_j_,TI_Diff_j_, rep_TI_results, TIbybin, count, filename):
     wb = Workbook()
     ws = wb.active
     write_resultstofile(reg_results,ws,1,1)
     rownumber = 8
+    for c in count:
+        write_resultstofile(c,ws,rownumber,1)
+        rownumber+=6
+
     for val in TI_MBE_j_:
         for val1 in val:
             try:
@@ -266,6 +279,6 @@ if __name__ == '__main__':
     TI_MBE_j_,TI_Diff_j_ = get_TI_MBE_Diff_j(inputdata)
     rep_TI_results = get_representative_TI_15mps(inputdata)
     TIbybin = get_TI_bybin(inputdata)
-    write_all_resultstofile(reg_results, TI_MBE_j_,TI_Diff_j_, rep_TI_results, TIbybin, results_filename)
-    #analyze_data(filename)
+    count = get_count_per_WSbin(inputdata,'RSD_WS')
 
+    write_all_resultstofile(reg_results, TI_MBE_j_,TI_Diff_j_, rep_TI_results, TIbybin, count, results_filename)
