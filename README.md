@@ -27,7 +27,7 @@ please follow the following steps to run the script.
 * run the following code. 
     * python CFARS_SS_Phase1_Analaysis.py "input_filename" "config_filename" "results_filename"
     * please note that you need to replace "input_filename" with your fully qualified(should include the file extension) filename, please do the same for the config_filename and results_filename, the results filename can only be a xlsx 
-    * Screen Capture (./cmdScreenCapture.PNG)
+    * ![Screen Capture](https://github.com/codenamenikky/CFARS_SS/blob/master/cmdScreenCapture.PNG)
 
 
     
