@@ -1,0 +1,10 @@
+*.xlsx
+*.pyc
+Filtereddatafor_10317.csv
+internaldatawrangling.py
+/.vscode
+/Files_CFARS_Meeting
+history.txt
+10317.csv
+/InternalData
+argumenttesting.py
