@@ -7,8 +7,9 @@ This script is created to run the CFARS_SS Phase 1 data analysis on your interna
 This is a python script, so you need Python2 to run this script. If you are new to python Anaconda is a good place to start, just make sure you choose Python 2.
 The following packages are required to run this script. 
 
->pandas, 
->openpyxl
+1.pandas 
+2.sklearn
+3.openpyxl
  
 you can run 
 '''python
