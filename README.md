@@ -8,7 +8,6 @@ This is a python script, so you need Python2 to run this script. If you are new 
 The following packages are required to run this script. 
 
 >pandas, 
->statsmodels,
 >openpyxl
  
 you can run 

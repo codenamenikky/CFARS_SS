@@ -8,12 +8,13 @@ Version: 0.0.1
 
 
 import pandas as pd
-import statsmodels.formula.api as sm
-import statsmodels.api as sm_api 
+# import statsmodels.formula.api as sm
+# import statsmodels.api as sm_api 
 import sys
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl import Workbook
 import argparse
+from sklearn import linear_model 
 def set_inputdataformat(config_file):
 # this function uses the input data function given in a configration file and converts into a dict 
 # of renamed cols which will be used to change the format from your internal format to a CFARS specific one 
@@ -59,8 +60,8 @@ def get_inputdata(filename, config_file):
 #     # plt = representative_TI[repcols].plot(title='Rep TI plot, TI_mean_bin+TI_sd_bin*1.28', ylable='Rep TI')
 #     # plt.figure.savefig('./{}_rep_TIplot.png'.format(projectname))
 
-def get_regression(x,y):
-# get the linear least squaes fit 
+def get_regression_sm(x,y):
+# get the linear least squaes fit, this uses statsmodel which needs to be installed outside of Anaconda 
     
     x = sm_api.add_constant(x)
     model = sm_api.OLS(y,x,missing='drop').fit()
@@ -69,6 +70,14 @@ def get_regression(x,y):
     result['WSdiff'] = abs((x.iloc[:,1]-y).mean())
     return [result[1], result[0], result[2], result[3]]
 
+def get_regression(x,y):
+# get the linear least squaes fit, this uses the sklearn model which is in Anaconda already.  
+    lm = linear_model.LinearRegression()
+    lm.fit(x.to_frame(),y.to_frame())
+    result = [lm.coef_[0][0],lm.intercept_[0]]
+    result.append(lm.score(x.to_frame(),y.to_frame()))
+    result.append(abs((x-y).mean()))
+    return result
 
 def get_ws_regression(inputdata):
     # get the ws regression results for all the col required pairs. 
