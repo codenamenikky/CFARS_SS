@@ -69,7 +69,6 @@ def get_regression(x,y):
     result['WSdiff'] = abs((x.iloc[:,1]-y).mean())
     return [result[1], result[0], result[2], result[3]]
 
-# TODO: need to write the results from regression into the file 
 
 def get_ws_regression(inputdata):
     # get the ws regression results for all the col required pairs. 
@@ -108,8 +107,9 @@ def get_count_per_WSbin(inputdata, column):
     resultsstats_bin = pd.DataFrame(resultsstats_bin.unstack()).T
     resultsstats_bin.index = [column]
     resultsstats_bin_p5 = pd.DataFrame(resultsstats_bin_p5.unstack()).T
-    resultsstats_bin_p5.index = [column]
-    return resultsstats_bin, resultsstats_bin_p5 
+    resultsstats_bin_p5.index = [column]   
+    return resultsstats_bin, resultsstats_bin_p5
+
 def get_stats_per_WSbin(inputdata, column):
     # this will be used as a base function for all frequency agg caliculaitons for each bin to get the stats per wind speed bins
     inputdata = inputdata[(inputdata['bins_p5'].astype(float)>1.5) & (inputdata['bins_p5'].astype(float)<21)]  
@@ -196,13 +196,55 @@ def get_TI_bybin(inputdata):
     
     return results
 
-def get_stats_total(inputdata):
+def get_stats_inBin(inputdata_m,start,end):    
     # this was discussed in the meeting , but the results template didn't ask for this. 
-    all_meanbiaserror = inputdata['TI_error_RSD_Ref'].mean()
-    all_meanbias_uncertainity = inputdata['TI_error_RSD_Ref'].std()
-    all_TI_diff_mean = inputdata['TI_diff_RSD_Ref'].mean()
-    all_TI_diff_std = inputdata['TI_diff_RSD_Ref'].std()
-    return [all_meanbiaserror, all_meanbias_uncertainity, all_TI_diff_mean, all_TI_diff_std]
+    inputdata = inputdata_m.loc[(inputdata_m['Ref_WS']>start) & (inputdata_m['Ref_WS']<=end)].copy()
+    inputdata['TI_diff_RSD_Ref']= inputdata['RSD_TI']-inputdata['Ref_TI'] # caliculating the diff in ti for each timestamp
+    inputdata['TI_error_RSD_Ref']= inputdata['TI_diff_RSD_Ref']/inputdata['Ref_TI'] #calculating the error for each timestamp
+    TI_error_RSD_Ref_Avg = inputdata['TI_error_RSD_Ref'].mean()
+    TI_error_RSD_Ref_Std = inputdata['TI_error_RSD_Ref'].std()
+    TI_diff_RSD_Ref_Avg = inputdata['TI_diff_RSD_Ref'].mean()
+    TI_diff_RSD_Ref_Std = inputdata['TI_diff_RSD_Ref'].std()
+    results = pd.DataFrame([TI_error_RSD_Ref_Avg,TI_error_RSD_Ref_Std,TI_diff_RSD_Ref_Avg,TI_diff_RSD_Ref_Std],columns=['RSD_Ref'])
+    if 'corrTI_RSD_TI' in inputdata.columns: # this is checking if corrected TI windspeed is present in the input data and using that for getting the results. 
+        inputdata['TI_diff_corrTI_RSD_Ref']= inputdata['corrTI_RSD_TI']-inputdata['Ref_TI'] # caliculating the diff in ti for each timestamp
+        inputdata['TI_error_corrTI_RSD_Ref']= inputdata['TI_diff_corrTI_RSD_Ref']/inputdata['Ref_TI'] #calculating the error for each timestamp
+        TI_error_corrTI_RSD_Ref_Avg = inputdata['TI_error_corrTI_RSD_Ref'].mean()
+        TI_error_corrTI_RSD_Ref_Std = inputdata['TI_error_corrTI_RSD_Ref'].std()
+        TI_diff_corrTI_RSD_Ref_Avg = inputdata['TI_diff_corrTI_RSD_Ref'].mean()
+        TI_diff_corrTI_RSD_Ref_Std = inputdata['TI_diff_corrTI_RSD_Ref'].std()
+        results['CorrTI_RSD_Ref'] = [TI_error_corrTI_RSD_Ref_Avg,TI_error_corrTI_RSD_Ref_Std, TI_diff_corrTI_RSD_Ref_Avg, TI_diff_corrTI_RSD_Ref_Std]
+    else:
+        results['CorrTI_RSD_Ref'] = [None, None, None, None]
+    # get the bin wise stats for both diff and error between RSD corrected for ws and Ref
+        
+    if 'corrWS_RSD_TI' in inputdata.columns: #this is checking if the corrected WS method was used for the wind speed and TI
+        inputdata['TI_diff_corrWS_RSD_Ref']= inputdata['corrWS_RSD_TI']-inputdata['Ref_TI'] # caliculating the diff in ti for each timestamp
+        inputdata['TI_error_corrWS_RSD_Ref']= inputdata['TI_diff_corrWS_RSD_Ref']/inputdata['Ref_TI'] #calculating the error for each timestamp
+        TI_error_corrWS_RSD_Ref_Avg = inputdata['TI_error_corrWS_RSD_Ref'].mean()
+        TI_error_corrWS_RSD_Ref_Std = inputdata['TI_error_corrWS_RSD_Ref'].std()
+        TI_diff_corrWS_RSD_Ref_Avg = inputdata['TI_diff_corrWS_RSD_Ref'].mean()
+        TI_diff_corrWS_RSD_Ref_Std = inputdata['TI_diff_corrWS_RSD_Ref'].std()
+        results['corrWS_RSD_Ref'] = [TI_error_corrWS_RSD_Ref_Avg,TI_error_corrWS_RSD_Ref_Std,TI_diff_corrWS_RSD_Ref_Avg,TI_diff_corrWS_RSD_Ref_Std]
+    else:
+        results['corrWS_RSD_Ref'] =[None, None, None, None]
+    
+    inputdata['TI_diff_Ane2_Ref']= inputdata['Ane2_TI']-inputdata['Ref_TI'] # caliculating the diff in ti for each timestamp
+    inputdata['TI_error_Ane2_Ref']= inputdata['TI_diff_Ane2_Ref']/inputdata['Ref_TI'] #calculating the error for each timestamp
+    TI_error_Ane2_Ref_Avg = inputdata['TI_error_Ane2_Ref'].mean()
+    TI_error_Ane2_Ref_Std = inputdata['TI_error_Ane2_Ref'].std()
+    TI_diff_Ane2_Ref_Avg = inputdata['TI_diff_Ane2_Ref'].mean()
+    TI_diff_Ane2_Ref_Std = inputdata['TI_diff_Ane2_Ref'].std()
+    results['Ane2_Ref'] = [TI_error_Ane2_Ref_Avg,TI_error_Ane2_Ref_Std,TI_diff_Ane2_Ref_Avg,TI_diff_Ane2_Ref_Std]
+    results.index = ['TI_error_mean', 'TI_error_std', 'TI_diff_mean', 'TI_diff_std']
+
+    return results.T # T(ranspose) so that reporting looks good. 
+
+def get_description_stats(inputdata):
+    totalstats = get_stats_inBin(inputdata,1.75,20)
+    belownominal = get_stats_inBin(inputdata,1.75,11.5)
+    abovenominal = get_stats_inBin(inputdata,10,20)
+    return totalstats, belownominal , abovenominal 
 
 def get_representative_TI_15mps(inputdata):
     #this is the represetative TI, this is currently only done at a 1m/s bins not sure if this needs to be on .5m/s
@@ -225,7 +267,7 @@ def write_resultstofile(df,ws, r_start,c_start):
         for c_idx, value in enumerate(row, c_start):
             ws.cell(row=r_idx, column=c_idx, value=value)
     
-def write_all_resultstofile(reg_results, TI_MBE_j_,TI_Diff_j_, rep_TI_results, TIbybin, count, filename):
+def write_all_resultstofile(reg_results, TI_MBE_j_,TI_Diff_j_, rep_TI_results, TIbybin, count, total_stats, filename):
     wb = Workbook()
     ws = wb.active
     write_resultstofile(reg_results,ws,1,1)
@@ -240,7 +282,7 @@ def write_all_resultstofile(reg_results, TI_MBE_j_,TI_Diff_j_, rep_TI_results, T
                 write_resultstofile(val1,ws,rownumber,1)
                 rownumber+=7
             except:
-                print('Could not write a row in TI_MBE_j_')
+                print('Could not write a row in TI_MBE_j_, TI Corrected or WS corrected windspeeds are not provided so not writing them')
                 
     for val in TI_Diff_j_:
             for val1 in val:
@@ -248,7 +290,7 @@ def write_all_resultstofile(reg_results, TI_MBE_j_,TI_Diff_j_, rep_TI_results, T
                     write_resultstofile(val1,ws,rownumber,1)
                     rownumber+=7
                 except:
-                    print('Could not write a row in TI_Diff_j_')
+                    print('Could not write a row in TI_Diff_j_, TI Corrected or WS corrected windspeeds are not provided so not writing them')
     rownumber+=6
     for val in TIbybin:
         for i in val:
@@ -260,6 +302,13 @@ def write_all_resultstofile(reg_results, TI_MBE_j_,TI_Diff_j_, rep_TI_results, T
     rownumber+=6                        
     write_resultstofile(rep_TI_results, ws, rownumber,1)
     rownumber+=7
+    headers_stats = dict(zip([0,1,2],['Total Bin Stats','Below nominal Stats','Above nominal Status']))
+    for idx, val in enumerate(total_stats):
+        ws.cell(row=rownumber, column=1, value=headers_stats[idx])
+        rownumber+=1        
+        write_resultstofile(val, ws, rownumber,1)        
+        rownumber+=7
+                
     wb.save(filename)
 
 def get_inputfiles():
@@ -280,5 +329,5 @@ if __name__ == '__main__':
     rep_TI_results = get_representative_TI_15mps(inputdata)
     TIbybin = get_TI_bybin(inputdata)
     count = get_count_per_WSbin(inputdata,'RSD_WS')
-
-    write_all_resultstofile(reg_results, TI_MBE_j_,TI_Diff_j_, rep_TI_results, TIbybin, count, results_filename)
+    total_stats = get_description_stats(inputdata)
+    write_all_resultstofile(reg_results, TI_MBE_j_,TI_Diff_j_, rep_TI_results, TIbybin, count, total_stats, results_filename)
