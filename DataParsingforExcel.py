@@ -1,12 +1,7 @@
 import CFARS_SS_Phase1_Analysis as m
-import pandas as pd
-# import statsmodels.formula.api as sm
-# import statsmodels.api as sm_api 
-import sys
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl import Workbook
-import argparse
-from sklearn import linear_model 
+
 
 def writedatainbins(inputdata, results_filename):
     wb = Workbook()
