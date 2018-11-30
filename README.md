@@ -23,7 +23,7 @@ please follow the following steps to run the script. YouTube Video --> https://y
 	1. Get the code. (2 unique ways to get the code) https://github.com/codenamenikky/CFARS_SS
 		1. Download directly from github
 		2. Clone the repo to your github desktop application
-	2. Get Python (I already have it installed)
+	2. Get Python
 		1. Get Anaconda (preferred) https://www.anaconda.com/
 		2. get modules [pandas, sklearn, openpyxl] (they come installed with anaconda)
 	3.  Configuration file for your data. 
