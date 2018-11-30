@@ -22,6 +22,10 @@ def set_inputdataformat(config_file):
     df = pd.read_excel(config_file)
     df = df.dropna()
     return dict(zip(df.Internal_Column.tolist(), df.CFARS_Column.tolist()))
+def get_CFARScolumns(config_file):
+    df = pd.read_excel(config_file)
+    df = df.dropna()
+    return df.CFARS_Column.tolist()
 
 def get_inputdata(filename, config_file):
 # This is the function to get the input data to analyze
@@ -279,8 +283,15 @@ def write_resultstofile(df,ws, r_start,c_start):
 def write_all_resultstofile(reg_results, TI_MBE_j_,TI_Diff_j_, rep_TI_results, TIbybin, count, total_stats, filename):
     wb = Workbook()
     ws = wb.active
+    # regression results
     write_resultstofile(reg_results,ws,1,1)
     rownumber = 8
+    # writing the total of all bins 
+    totalcount = count[0].sum().sum()
+    ws.cell(row=rownumber, column=1, value='Total Count')
+    ws.cell(row=rownumber, column=2, value=totalcount)
+    rownumber+=3
+
     for c in count:
         write_resultstofile(c,ws,rownumber,1)
         rownumber+=6
@@ -337,6 +348,6 @@ if __name__ == '__main__':
     TI_MBE_j_,TI_Diff_j_ = get_TI_MBE_Diff_j(inputdata)
     rep_TI_results = get_representative_TI_15mps(inputdata)
     TIbybin = get_TI_bybin(inputdata)
-    count = get_count_per_WSbin(inputdata,'RSD_WS')
+    count = get_count_per_WSbin(inputdata,'RSD_WS')    
     total_stats = get_description_stats(inputdata)
     write_all_resultstofile(reg_results, TI_MBE_j_,TI_Diff_j_, rep_TI_results, TIbybin, count, total_stats, results_filename)
