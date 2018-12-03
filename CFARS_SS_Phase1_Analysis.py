@@ -271,6 +271,7 @@ def get_representative_TI_15mps(inputdata):
     results = inputdata_TI15[listofcols].describe()
     results.loc['Rep_TI',:]=results.loc['mean']+1.28*results.loc['std']
     results = results.loc[['mean','std','Rep_TI'],:].T
+    results.columns = ['mean_15mps','std_15mps', 'Rep_TI']
     return results
 
 def write_resultstofile(df,ws, r_start,c_start):
@@ -321,7 +322,7 @@ def write_all_resultstofile(reg_results, TI_MBE_j_,TI_Diff_j_, rep_TI_results, T
                 print('No data to write in one of the dataframes of TI by bin')
     rownumber+=6                        
     write_resultstofile(rep_TI_results, ws, rownumber,1)
-    rownumber+=7
+    rownumber+=8
     headers_stats = dict(zip([0,1,2],['Total Bin Stats','Below nominal Stats','Above nominal Status']))
     for idx, val in enumerate(total_stats):
         ws.cell(row=rownumber, column=1, value=headers_stats[idx])
