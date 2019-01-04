@@ -1,4 +1,4 @@
 pandas
 openpyxl
 sklearn
- 
+xlrd 
