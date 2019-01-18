@@ -12,8 +12,17 @@ get all the other attributes in one location and make a dataframe out of it.
 then read the excel file, get the last row of the excel sheet and then enter the data into the excel sheet. 
 """
 
-#TODO: solve the index errors 
+#TODO: write the data to the excel sheet 
 import pandas as pd
+from openpyxl.utils.dataframe import dataframe_to_rows
+from openpyxl import Workbook
+
+def write_resultstofile(df,ws, r_start,c_start):
+    # write the regression results to file.
+    rows = dataframe_to_rows(df)
+    for r_idx, row in enumerate(rows, r_start):
+        for c_idx, value in enumerate(row, c_start):
+            ws.cell(row=r_idx, column=c_idx, value=value)
 
 def get_datasplitout(filename):
     df = pd.read_excel(filename)
@@ -43,49 +52,54 @@ def get_datasplitout(filename):
         stats = stats.join(a_stats)
         TI_diff_cols = stats.columns[stats.columns.str.contains('TI_diff')].tolist()
         TI_error_cols = stats.columns[stats.columns.str.contains('TI_error')].tolist()
-        print TI_error_cols
-        print stats.iloc[:,TI_diff_cols]
 
-        return stats.iloc[:,TI_diff_cols] , stats.iloc[:,TI_error_cols]
+        return stats.loc[:,TI_diff_cols] , stats.loc[:,TI_error_cols]
 
-    statistics_diff, statistics_error = get_aboveandbelow_nominal_stats()
-
-    print statistics_diff
     def get_regressionresults(): #REGRESSION RESULTS IN A DATAFRAME 
         reggression = attribute[attribute.str.contains('WS_regression')]
-        reggression_df = data.loc[reggression]
-        reggression_df['Project'] = project
-        reggression_df['Company'] = company
-        return reggression_df
+        reggression_df = data.loc[reggression].copy()
+        reggression_df = reggression_df.iloc[:,0:4]
+
+        reggression_df = reggression_df.assign(Project=project)
+        reggression_df= reggression_df.assign(Company=company)
+        cols = list(reggression_df.columns)
+        i = [len(cols)-1, len(cols)-2]
+        i+=range(0,len(cols)-2)
+        orderedcols = [cols[k] for k in i]
+
+        return reggression_df[orderedcols]
 
     def get_TI_error_results(): # get the TI mean bias error results by bin    
         TI_error =attribute[attribute.str.contains('TI_error')]
-        TI_error_df = data[TI_error]
-        TI_error_df['Project'] = project
-        TI_error_df['Company'] = company
+        TI_error_df = data.loc[TI_error].copy()
+        TI_error_df.loc['Project'] = project
+        TI_error_df.loc['Company'] = company
         rows = TI_error_df.shape[0]
         TI_error_df_1mps = TI_error_df.iloc[range(0,rows,2),:]
+        TI_error_df_1mps = TI_error_df_1mps.join(statistics_error)
         TI_error_df_05mps = TI_error_df.iloc[range(1,rows,2),:]
+        TI_error_df_05mps = TI_error_df_05mps.join(statistics_error)
 
         return TI_error_df_1mps , TI_error_df_05mps
     
     def get_TI_diff_results(): # get the TI_difference results based on bin 
         TI_diff =attribute[attribute.str.contains('TI_diff')]
-        TI_diff_df = data[TI_diff]
-        TI_diff_df['Project'] = project
-        TI_diff_df['Company'] = company
+        TI_diff_df = data.loc[TI_diff].copy()
+        TI_diff_df.loc['Project'] = project
+        TI_diff_df.loc['Company'] = company
         rows = TI_diff_df.shape[0]
         TI_diff_df_1mps = TI_diff_df.iloc[range(0,rows,2),:]
+        TI_diff_df_1mps = TI_diff_df_1mps.join(statistics_diff)
         TI_diff_df_05mps = TI_diff_df.iloc[range(1,rows,2),:]
-        
+        TI_diff_df_05mps = TI_diff_df_05mps.join(statistics_diff)
         return TI_diff_df_1mps , TI_diff_df_05mps 
 
     def get_TI_values():# get the TI values by bin, get the representative TI values based on mean TI and Std
         TI_values = attribute[attribute.str.contains('_TI')]
-        TI_values_df=data.loc[TI_values]
-        TI_values_df['Project'] = project
-        TI_values_df['Company'] = company
-        totallen = TI_values_df.shapep[0]
+        TI_values_df=data.loc[TI_values].copy()
+        TI_values_df.loc['Project'] = project
+        TI_values_df.loc['Company'] = company
+        totallen = TI_values_df.shape[0]
         numofvar = TI_values.shape[0]
 
         # make a dataframe with aggregate values for the TI values for representative TI
@@ -97,7 +111,18 @@ def get_datasplitout(filename):
         TI_values_05mpsbin_df = TI_values_df.iloc[range(1,totallen,numofvar),:]
         
         return TI_values_agg_df, TI_values_1mpsbin_df, TI_values_05mpsbin_df
-
+    statistics_diff, statistics_error = get_aboveandbelow_nominal_stats()
+    regression_stats = get_regressionresults()
+    TI_values_agg_df, TI_values_1mpsbin_df, TI_values_05mpsbin_df = get_TI_values()
+    TI_diff_df_1mps , TI_diff_df_05mps = get_TI_diff_results()
+    TI_error_df_1mps , TI_error_df_05mps = get_TI_error_results()
+    
+    # write the results to the file 
+    wb = Workbook()
+    ws = wb.active
+    # regression results
+    write_resultstofile(regression_stats,ws,1,1)
+    wb.save('./deleteme.xlsx')
 
 if __name__=="__main__":
     filename = r"C:/Users/nikhil.kondabala/Documents/GitHub/CFARS_SS/InternalData/filtereddata/Phase1Tests_ResultsMatrix_Apex_10317_v01_20181130.xlsx"
