@@ -274,7 +274,7 @@ def get_representative_TI_15mps(inputdata):
     results.columns = ['mean_15mps','std_15mps', 'Rep_TI']
     return results
 
-def write_resultstofile(df,ws, r_start,c_start):
+def     _resultstofile(df,ws, r_start,c_start):
     # write the regression results to file.
     rows = dataframe_to_rows(df)
     for r_idx, row in enumerate(rows, r_start):
