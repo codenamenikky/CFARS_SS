@@ -193,7 +193,7 @@ if __name__=="__main__":
         try:
 
             results_1mps, results_05mps = get_datasplitout(f)
-            write_results_aggregate_workbook(wb,results_1mps,path+'deleteme_1mps.xlsx')
-            write_results_aggregate_workbook(wb1,results_05mps,path+'deleteme_05mps.xlsx')
+            write_results_aggregate_workbook(wb,results_1mps,path+'CFARS_Aggregate_Results_Phase1test_1mps.xlsx')
+            write_results_aggregate_workbook(wb1,results_05mps,path+'CFARS_Aggregate_Results_Phase1test_05mps.xlsx')
         except:
             print 'there is a error in the file:  {} '.format(f)
