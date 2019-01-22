@@ -12,7 +12,11 @@ get all the other attributes in one location and make a dataframe out of it.
 then read the excel file, get the last row of the excel sheet and then enter the data into the excel sheet. 
 """
 
-#TODO: write the data to the excel sheet 
+#TODO: Add crawler in the folder so that we can make a list of all files in the folder. 
+#TODO: Add headers to the output file. 
+#TODO: Think about the clean up for the empty rows 
+
+
 import pandas as pd
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl import Workbook
@@ -26,7 +30,8 @@ def write_resultstofile(df,ws):
 def get_datasplitout(filename):
     df = pd.read_excel(filename)
     data=df[~df.iloc[:,0].isnull() | ~df.index.isnull()]
-    f = filename.split('/')[-1]
+    f = filename.split('\\')[-1]
+
     company= f.split('_')[2]
     project= f.split('_')[3]
     attribute = data.index.unique()
@@ -166,16 +171,29 @@ def write_results_aggregate_workbook(wb, results, savefileas):
     wb.save(savefileas)
 
 
+def get_listofFilestoread():
+    import os
+    cwd = os.getcwd()
+    print cwd
+    path = cwd+'\\results\\'
+    files = []
+    # r=root, d=directories, f = files
+    for r, d, f in os.walk(path):
+        for file in f:
+            if '.xlsx' in file:
+                files.append(os.path.join(r, file))
 
+    return files, path
 if __name__=="__main__":
-    filename = []
-    filename.append(r"C:/Users/nikhil.kondabala/Documents/GitHub/CFARS_SS/InternalData/filtereddata/Phase1Tests_ResultsMatrix_Apex_10317_v01_20181130.xlsx")
-    filename.append(r"C:/Users/nikhil.kondabala/Documents/GitHub/CFARS_SS/InternalData/filtereddata/Phase1Tests_ResultsMatrix_Apex_10317_v01_20181130.xlsx")
+
+    files, path = get_listofFilestoread()
     wb = create_master_workbook()
     wb1 = create_master_workbook()
-    for f in filename:
-        print f
-        results_1mps, results_05mps = get_datasplitout(f)
-        write_results_aggregate_workbook(wb,results_1mps,'deleteme_1mps.xlsx')
-        write_results_aggregate_workbook(wb1,results_05mps,'deleteme_05mps.xlsx')
+    for f in files:
+        try:
 
+            results_1mps, results_05mps = get_datasplitout(f)
+            write_results_aggregate_workbook(wb,results_1mps,path+'deleteme_1mps.xlsx')
+            write_results_aggregate_workbook(wb1,results_05mps,path+'deleteme_05mps.xlsx')
+        except:
+            print 'there is a error in the file:  {} '.format(f)
