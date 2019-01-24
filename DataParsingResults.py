@@ -12,10 +12,8 @@ get all the other attributes in one location and make a dataframe out of it.
 then read the excel file, get the last row of the excel sheet and then enter the data into the excel sheet. 
 """
 
-#TODO: Add crawler in the folder so that we can make a list of all files in the folder. 
 #TODO: Add headers to the output file. 
 #TODO: Think about the clean up for the empty rows 
-
 
 import pandas as pd
 from openpyxl.utils.dataframe import dataframe_to_rows
@@ -23,12 +21,20 @@ from openpyxl import Workbook
 
 def write_resultstofile(df,ws):
     # write the regression results to file.
-    rows = dataframe_to_rows(df, index=True, header=False)
+    rows = dataframe_to_rows(df, index=True, header=True)
     for r in rows:
         ws.append(r)
 
 def get_datasplitout(filename):
     df = pd.read_excel(filename)
+    # getting the correct column keys 
+    cols_key_df = pd.read_excel('./Column_Key.xlsx')
+    df_cols = df.columns.to_frame()
+    df_cols.index = range(0,78)
+    df_cols = df_cols.join(cols_key_df)
+    df_cols_dicts = df_cols.to_dict('records')
+
+    # removing the null values. 
     data=df[~df.iloc[:,0].isnull() | ~df.index.isnull()]
     f = filename.split('\\')[-1]
 
@@ -42,12 +48,22 @@ def get_datasplitout(filename):
         df= df.assign(Company=company)
         return df
 
-    def order_cols_df(df):
+    def order_cols_df(df,Col_touse):
         cols = list(df.columns)
         i = [len(cols)-1, len(cols)-2]
         i+=range(0,len(cols)-2)
         orderedcols = [cols[k] for k in i]
-        return df[orderedcols]
+        df = df[orderedcols]# this is the new dataframe with ordered cols
+        
+        newcols = []
+        for col in orderedcols:
+            lookup = next((item for item in df_cols_dicts if item["Original"] == col), None)
+            if not lookup:
+                lookup = {Col_touse:col}
+            newcols.append(lookup[Col_touse])
+        df.columns = newcols # this is the new dataframe with renamed cols
+
+        return df
 
     # TRY TO GET ALL THE RESULTS WE NEED IN A DATAFRAME 
     def get_aboveandbelow_nominal_stats():
@@ -68,8 +84,19 @@ def get_datasplitout(filename):
         stats = stats.join(a_stats)
         TI_diff_cols = stats.columns[stats.columns.str.contains('TI_diff')].tolist()
         TI_error_cols = stats.columns[stats.columns.str.contains('TI_error')].tolist()
+        TI_diff_df , TI_error_df = stats.loc[:,TI_diff_cols] , stats.loc[:,TI_error_cols]
 
-        return stats.loc[:,TI_diff_cols] , stats.loc[:,TI_error_cols]    
+        diff_rows = TI_diff_df.index.tolist()
+        diff_rows = ['TI_diff_'+i for i in diff_rows]
+        TI_diff_df.index = diff_rows
+
+        error_rows = TI_error_df.index.tolist()
+        error_rows = ['TI_error_'+i for i in error_rows]
+        TI_error_df.index = error_rows
+
+        return TI_diff_df , TI_error_df    
+    
+    statistics_diff, statistics_error = get_aboveandbelow_nominal_stats()
 
     def get_regressionresults(): #REGRESSION RESULTS IN A DATAFRAME 
         reggression = attribute[attribute.str.contains('WS_regression')]
@@ -77,7 +104,7 @@ def get_datasplitout(filename):
         reggression_df = reggression_df.iloc[:,0:4]
 
         reggression_df = add_projectdetails(reggression_df)
-        reggression_df = order_cols_df(reggression_df)
+        reggression_df = order_cols_df(reggression_df, 'Original')
 
         return reggression_df
 
@@ -92,9 +119,9 @@ def get_datasplitout(filename):
         TI_error_df_05mps = TI_error_df_05mps.join(statistics_error)
         # add project details and order cols 
         TI_error_df_1mps = add_projectdetails(TI_error_df_1mps)
-        TI_error_df_1mps = order_cols_df(TI_error_df_1mps)
+        TI_error_df_1mps = order_cols_df(TI_error_df_1mps, '1mps_bins')
         TI_error_df_05mps = add_projectdetails(TI_error_df_05mps)
-        TI_error_df_05mps = order_cols_df(TI_error_df_05mps)
+        TI_error_df_05mps = order_cols_df(TI_error_df_05mps, 'p5mps_bins')
 
        
         return TI_error_df_1mps , TI_error_df_05mps
@@ -109,8 +136,8 @@ def get_datasplitout(filename):
         TI_diff_df_05mps = TI_diff_df.iloc[range(1,rows,2),:]
         TI_diff_df_05mps = TI_diff_df_05mps.join(statistics_diff)
         
-        TI_diff_df_1mps = order_cols_df(TI_diff_df_1mps)
-        TI_diff_df_05mps = order_cols_df(TI_diff_df_05mps)
+        TI_diff_df_1mps = order_cols_df(TI_diff_df_1mps, '1mps_bins')
+        TI_diff_df_05mps = order_cols_df(TI_diff_df_05mps, 'p5mps_bins')
 
         return TI_diff_df_1mps , TI_diff_df_05mps 
 
@@ -129,14 +156,13 @@ def get_datasplitout(filename):
         TI_values_1mpsbin_df = TI_values_df.iloc[range(0,totallen,numofvar),:]
         # get the .05 mps bin TI values and add the aggregate representative ti values to the end of df
         TI_values_05mpsbin_df = TI_values_df.iloc[range(1,totallen,numofvar),:]
-        TI_values_05mpsbin_df = order_cols_df(TI_values_05mpsbin_df)
-        TI_values_1mpsbin_df = order_cols_df(TI_values_1mpsbin_df)
+        TI_values_05mpsbin_df = order_cols_df(TI_values_05mpsbin_df, 'p5mps_bins')
+        TI_values_1mpsbin_df = order_cols_df(TI_values_1mpsbin_df, '1mps_bins')
         TI_values_agg_df = add_projectdetails(TI_values_agg_df)
-        TI_values_agg_df = order_cols_df(TI_values_agg_df)
+        TI_values_agg_df = order_cols_df(TI_values_agg_df, 'Original')
 
         return TI_values_agg_df, TI_values_1mpsbin_df, TI_values_05mpsbin_df
     
-    statistics_diff, statistics_error = get_aboveandbelow_nominal_stats()
     regression_stats = get_regressionresults()
     TI_values_agg_df, TI_values_1mpsbin_df, TI_values_05mpsbin_df = get_TI_values()
     TI_diff_df_1mps , TI_diff_df_05mps = get_TI_diff_results()
@@ -162,10 +188,11 @@ def write_results_aggregate_workbook(wb, results, savefileas):
     TI_agg_sheet = wb['TI_agg']
   
     write_resultstofile(results[0],reg_sheet)
+    write_resultstofile(results[2],TI_values_sheet)
+    write_resultstofile(results[3],TI_diff_sheet)
     write_resultstofile(results[1],TI_agg_sheet)
     write_resultstofile(results[4],TI_MBE_sheet)
-    write_resultstofile(results[3],TI_diff_sheet)
-    write_resultstofile(results[2],TI_values_sheet)
+
   
 
     wb.save(savefileas)
@@ -191,7 +218,7 @@ if __name__=="__main__":
     wb1 = create_master_workbook()
     for f in files:
         try:
-
+        # f = "C:/Users/nikhil.kondabala/Documents/GitHub/CFARS_SS/results/APEX/Phase1Tests_ResultsMatrix_Apex_10317_v01_20181130.xlsx"
             results_1mps, results_05mps = get_datasplitout(f)
             write_results_aggregate_workbook(wb,results_1mps,path+'CFARS_Aggregate_Results_Phase1test_1mps.xlsx')
             write_results_aggregate_workbook(wb1,results_05mps,path+'CFARS_Aggregate_Results_Phase1test_05mps.xlsx')
