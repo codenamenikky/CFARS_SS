@@ -129,13 +129,16 @@ def get_datasplitout(filename):
     def get_TI_diff_results(): # get the TI_difference results based on bin 
         TI_diff =attribute[attribute.str.contains('TI_diff')]
         TI_diff_df = data.loc[TI_diff].copy()
-        TI_diff_df = add_projectdetails(TI_diff_df)
+
         rows = TI_diff_df.shape[0]
         TI_diff_df_1mps = TI_diff_df.iloc[range(0,rows,2),:]
         TI_diff_df_1mps = TI_diff_df_1mps.join(statistics_diff)
         TI_diff_df_05mps = TI_diff_df.iloc[range(1,rows,2),:]
         TI_diff_df_05mps = TI_diff_df_05mps.join(statistics_diff)
-        
+
+        TI_diff_df_05mps = add_projectdetails(TI_diff_df_05mps)
+        TI_diff_df_1mps = add_projectdetails(TI_diff_df_1mps)
+
         TI_diff_df_1mps = order_cols_df(TI_diff_df_1mps, '1mps_bins')
         TI_diff_df_05mps = order_cols_df(TI_diff_df_05mps, 'p5mps_bins')
 
@@ -211,16 +214,25 @@ def get_listofFilestoread():
                 files.append(os.path.join(r, file))
 
     return files, path
+def cleanup_results(filename, sheetname, ws):
+    #make a new worksheet work book object so that we can clean it up. 
+    df = pd.read_excel(filename, sheet_name=sheetname)
+    df = df[~df.index.isna()]
+    return df
+
 if __name__=="__main__":
 
     files, path = get_listofFilestoread()
     wb = create_master_workbook()
     wb1 = create_master_workbook()
+    results_file_1mps = path+'CFARS_Aggregate_Results_Phase1test_1mps.xlsx'
+    results_file_05mps = path+'CFARS_Aggregate_Results_Phase1test_05mps.xlsx'
+
     for f in files:
         try:
         # f = "C:/Users/nikhil.kondabala/Documents/GitHub/CFARS_SS/results/APEX/Phase1Tests_ResultsMatrix_Apex_10317_v01_20181130.xlsx"
             results_1mps, results_05mps = get_datasplitout(f)
-            write_results_aggregate_workbook(wb,results_1mps,path+'CFARS_Aggregate_Results_Phase1test_1mps.xlsx')
-            write_results_aggregate_workbook(wb1,results_05mps,path+'CFARS_Aggregate_Results_Phase1test_05mps.xlsx')
+            write_results_aggregate_workbook(wb,results_1mps,results_file_1mps)
+            write_results_aggregate_workbook(wb1,results_05mps,results_file_05mps)
         except:
             print 'there is a error in the file:  {} '.format(f)
