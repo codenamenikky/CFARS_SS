@@ -10,6 +10,7 @@ The following packages are required to run this script.
 1.pandas 
 2.sklearn
 3.openpyxl
+4.xlrd
  
 you can run 
 '''python
