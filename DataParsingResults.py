@@ -10,10 +10,16 @@ the general process that we are trying to get to is get the filename of the resu
 project details. then gather all the regression resutls in one locaiton 
 get all the other attributes in one location and make a dataframe out of it. 
 then read the excel file, get the last row of the excel sheet and then enter the data into the excel sheet. 
+
+usage DataParsingResults.py 
+
+
 """
 
 #TODO: Add headers to the output file. 
 #TODO: Think about the clean up for the empty rows 
+#TODO: get the count details in one location
+#TODO: currently this is only setup to run in Nikhil's computer need to change that
 
 import pandas as pd
 from openpyxl.utils.dataframe import dataframe_to_rows
@@ -125,7 +131,25 @@ def get_datasplitout(filename):
 
        
         return TI_error_df_1mps , TI_error_df_05mps
-    
+
+    def get_TI_count_results(): # get the TI mean bias error results by bin    
+        TI_count =attribute[attribute.str.contains('RSD_WS')]
+        TI_count_df = data.loc[TI_count].copy()
+
+        rows = TI_count_df.shape[0]
+        TI_count_df_1mps = TI_count_df.iloc[range(0,rows,2),:]
+        TI_count_df_1mps = TI_count_df_1mps.join(statistics_error)
+        TI_count_df_05mps = TI_count_df.iloc[range(1,rows,2),:]
+        TI_count_df_05mps = TI_count_df_05mps.join(statistics_error)
+        # add project details and order cols 
+        TI_count_df_1mps = add_projectdetails(TI_count_df_1mps)
+        TI_count_df_1mps = order_cols_df(TI_count_df_1mps, '1mps_bins')
+        TI_count_df_05mps = add_projectdetails(TI_count_df_05mps)
+        TI_count_df_05mps = order_cols_df(TI_count_df_05mps, 'p5mps_bins')
+
+       
+        return TI_count_df_1mps , TI_count_df_05mps
+
     def get_TI_diff_results(): # get the TI_difference results based on bin 
         TI_diff =attribute[attribute.str.contains('TI_diff')]
         TI_diff_df = data.loc[TI_diff].copy()
@@ -170,8 +194,10 @@ def get_datasplitout(filename):
     TI_values_agg_df, TI_values_1mpsbin_df, TI_values_05mpsbin_df = get_TI_values()
     TI_diff_df_1mps , TI_diff_df_05mps = get_TI_diff_results()
     TI_error_df_1mps , TI_error_df_05mps = get_TI_error_results()
-    results_1mps = [regression_stats,TI_values_agg_df,TI_values_1mpsbin_df,TI_diff_df_1mps,TI_error_df_1mps]
-    results_05mps = [regression_stats,TI_values_agg_df,TI_values_05mpsbin_df,TI_diff_df_05mps,TI_error_df_05mps]
+    TI_count_df_1mps , TI_count_df_05mps =get_TI_count_results()
+
+    results_1mps = [regression_stats,TI_values_agg_df,TI_values_1mpsbin_df,TI_diff_df_1mps,TI_error_df_1mps, TI_count_df_1mps]
+    results_05mps = [regression_stats,TI_values_agg_df,TI_values_05mpsbin_df,TI_diff_df_05mps,TI_error_df_05mps, TI_count_df_05mps]
     return results_1mps, results_05mps
 
 def create_master_workbook():
@@ -181,6 +207,7 @@ def create_master_workbook():
     wb.create_sheet(title='TI_diff')
     wb.create_sheet(title='TI_values')
     wb.create_sheet(title='TI_agg')
+    wb.create_sheet(title='TI_count')
     return wb
 def write_results_aggregate_workbook(wb, results, savefileas):
     # write the results to the file
@@ -189,13 +216,14 @@ def write_results_aggregate_workbook(wb, results, savefileas):
     TI_diff_sheet = wb['TI_diff']
     TI_values_sheet = wb['TI_values']
     TI_agg_sheet = wb['TI_agg']
+    TI_count_sheet = wb['TI_count']
   
     write_resultstofile(results[0],reg_sheet)
     write_resultstofile(results[2],TI_values_sheet)
     write_resultstofile(results[3],TI_diff_sheet)
     write_resultstofile(results[1],TI_agg_sheet)
     write_resultstofile(results[4],TI_MBE_sheet)
-
+    write_resultstofile(results[5],TI_count_sheet)
   
 
     wb.save(savefileas)
@@ -214,20 +242,30 @@ def get_listofFilestoread():
                 files.append(os.path.join(r, file))
 
     return files, path
-def cleanup_results(filename, sheetname, ws):
+
+def cleanup_results(filename, wb, savefileas):
     #make a new worksheet work book object so that we can clean it up. 
-    df = pd.read_excel(filename, sheet_name=sheetname)
-    df = df[~df.index.isna()]
-    return df
+    sheets = ['Regression','TI_MBE','TI_diff','TI_values','TI_agg','TI_count']
+    for sheet in sheets:
+        df = pd.read_excel(filename, sheet_name=sheet)
+        df = df[~df.index.isna()]
+        ws = wb[sheet]
+        write_resultstofile(df,ws)
+    wb.save(savefileas)
 
 if __name__=="__main__":
 
     files, path = get_listofFilestoread()
     wb = create_master_workbook()
     wb1 = create_master_workbook()
+    wb2 = create_master_workbook()
+    wb3 = create_master_workbook()
+    
     results_file_1mps = path+'CFARS_Aggregate_Results_Phase1test_1mps.xlsx'
     results_file_05mps = path+'CFARS_Aggregate_Results_Phase1test_05mps.xlsx'
-
+    final_results_file_1mps = path+'Final_CFARS_Aggregate_Results_Phase1test_1mps.xlsx'
+    final_results_file_05mps = path+'Final_CFARS_Aggregate_Results_Phase1test_05mps.xlsx'
+    
     for f in files:
         try:
         # f = "C:/Users/nikhil.kondabala/Documents/GitHub/CFARS_SS/results/APEX/Phase1Tests_ResultsMatrix_Apex_10317_v01_20181130.xlsx"
@@ -236,3 +274,5 @@ if __name__=="__main__":
             write_results_aggregate_workbook(wb1,results_05mps,results_file_05mps)
         except:
             print 'there is a error in the file:  {} '.format(f)
+    
+    cleanup_results(results_file_05mps, wb3, final_results_file_05mps)
