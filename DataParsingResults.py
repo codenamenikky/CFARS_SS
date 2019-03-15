@@ -275,4 +275,5 @@ if __name__=="__main__":
         except:
             print 'there is a error in the file:  {} '.format(f)
     
+    cleanup_results(results_file_1mps, wb2, final_results_file_1mps)
     cleanup_results(results_file_05mps, wb3, final_results_file_05mps)
