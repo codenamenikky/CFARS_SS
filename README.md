@@ -37,5 +37,20 @@ please follow the following steps to run the script. YouTube Video --> https://y
 
     * ![Screen Capture](https://github.com/codenamenikky/CFARS_SS/blob/master/cmdScreenCapture.PNG)
 
+#### Phase II
 
-    
+Phase II code execution is nearly the same as Phase I. Asssuming you already have Python from Phase I, proceed as follow:
+
+	1. Get the code. (2 unique ways to get the code) https://github.com/codenamenikky/CFARS_SS
+		1. Download directly from github
+		2. Clone the repo to your github desktop application
+		
+	2.  Configuration file for your data. 
+		1. Get the headers from your internal data file 
+		2. Paste the header into the configuration template 
+		3. Change the header information with the appropriate names 
+		4. Add Phase II metadata: sensor type, measurement height, and correction type. 
+		
+	3. Run code on your data and configuration file
+		1. Open cmd and change the directory to your CFARS_SS code folder
+		2. python CFARS_SS_Phase2_Analysis.py inputdata.xlsx PhaseII_Configuration_template.xlsx results.xlsx
