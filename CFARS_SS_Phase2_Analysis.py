@@ -161,26 +161,11 @@ def perform_ge_correction(inputdata):
         RSD_TI[RSD_TI<0.3] = model[0]*RSD_TI[RSD_TI<0.3]+model[1]
         inputdata['corrTI_RSD_TI'] = RSD_TI
         
-        results = pd.DataFrame(columns=['sensor','height','correction','m',\
-                                        'c','rsquared','ws_diff'])
-
-        results.loc['TI_regression_corrTI_RSD_Ref',3:7] = model
+        results = pd.DataFrame(columns=['m','c','rsquared','ws_diff'])
+        results.loc['TI_regression_corrTI_RSD_Ref'] = model
         
     return inputdata, results
 
-def zx_correct(x):
-    return(1./np.interp(x,[20,90],[1.037,0.918],left=1.037,right=0.918))
-
-def perform_zx_correction(inputdata, sta):
-    if 'corrTI_RSD_TI' in inputdata.columns:
-        sys.exit("Corrected TI already present in data. \
-                 \nNo correction performed. Terminating process...")
-    else:
-        RSD_TI = inputdata['RSD_TI'].copy()
-        RSD_TI = RSD_TI * zx_correct(sta)
-        inputdata['corrTI_RSD_TI'] = RSD_TI
-        
-    return inputdata
 
 def get_representative_TI(inputdata):
     # get the representaive TI
@@ -434,40 +419,20 @@ if __name__ == '__main__':
     # model loop may need to be here to accomodate model output
     
     if correction == 'GE':
-        inputdata,lm_corr= perform_ge_correction(inputdata)
+        inputdata,lm_ge= perform_ge_correction(inputdata)
         print("GE correction applied:\n")
-        print("y = "+str(round(lm_corr.iloc[0,3],2))+"*x + "+\
-              str(round(lm_corr.iloc[0,4],2)))
-        lm_corr['sensor'] = sensor
-        lm_corr['height'] = height
-        lm_corr['correction'] = correction
+        print("y = "+str(round(lm_ge.iloc[0,0],2))+"*x + "+str(round(lm_ge.iloc[0,1],2)))
+        lm_ge['sensor'] = sensor
+        lm_ge['height'] = height
+        lm_ge['correction'] = correction
     elif correction == 'L-TERRA':
         pass
     elif correction == 'EON':
         pass
     elif correction == 'ZX':
-        inputdata = perform_zx_correction(inputdata, height)
-        print("ZX correction applied:\n"+str(round(zx_correct(height),4))+\
-              " for station height "+str(height)+" meters")
-        lm_corr = pd.DataFrame(columns=['sensor','height','correction','m',\
-                                        'c','rsquared','ws_diff'])
-        lm_corr.loc['TI_regression_corrTI_RSD_Ref','sensor'] = sensor
-        lm_corr.loc['TI_regression_corrTI_RSD_Ref','height'] = height
-        lm_corr.loc['TI_regression_corrTI_RSD_Ref','correction'] = correction
-        lm_corr.loc['TI_regression_corrTI_RSD_Ref','m'] = zx_correct(height)
-        
+        pass
     elif correction == 'Vaisala':
-        if 'corrTI_RSD_TI' not in inputdata.columns:
-            sys.exit("Corrected TI not present in data. \
-                     \nInvalid inputs. Terminating process...")
-        else:
-            print("Vaisala - Triton correction applied to input data\n")
-            lm_corr = pd.DataFrame(columns=['sensor','height','correction','m',\
-                                            'c','rsquared','ws_diff'])
-            lm_corr.loc['TI_regression_corrTI_RSD_Ref','sensor'] = sensor
-            lm_corr.loc['TI_regression_corrTI_RSD_Ref','height'] = height
-            lm_corr.loc['TI_regression_corrTI_RSD_Ref','correction'] = correction
-        
+        print("Vaisala - Triton correction applied to input data\n")
     else:
         print("No corrections applied")
     
@@ -485,5 +450,5 @@ if __name__ == '__main__':
     
     write_all_resultstofile(reg_results, TI_MBE_j_,TI_Diff_j_, rep_TI_results,\
                             TIbybin, count, total_stats, results_filename,\
-                            lm_corr)
+                            lm_ge)
 
