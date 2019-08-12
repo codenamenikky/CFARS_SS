@@ -92,7 +92,7 @@ def get_SiteMetadata(config_file):
     return(siteMetadata)
 
 def get_FilteringMetadata(config_file):
-    configMetadata = pd.read_excel(config_file, usecols = [3,4,5],nrows=8)
+    configMetadata = pd.read_excel(config_file, usecols = [7,8,9],nrows=8)
     return(configMetadata)
 
 def check_for_corrections(config_file):
