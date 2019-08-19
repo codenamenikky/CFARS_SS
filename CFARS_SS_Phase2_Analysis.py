@@ -217,7 +217,6 @@ def get_ws_regression(inputdata):
     return results
 
 def perform_ge_correction(inputdata):
-    import matplotlib.pyplot as plt
 
     # filter out RSD_TI > 0.3
     # model = get_regression(filtered RSD_TI, Ref_TI)
