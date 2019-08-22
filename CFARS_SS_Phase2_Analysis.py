@@ -20,8 +20,8 @@ ToDo:
 
 import pandas as pd
 import numpy as np
-import statsmodels.formula.api as sm
-import statsmodels.api as sm_api
+#import statsmodels.formula.api as sm
+#import statsmodels.api as sm_api
 import sys
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl import Workbook
@@ -146,14 +146,14 @@ def get_inputdata(filename, config_file):
 #     # plt = representative_TI[repcols].plot(title='Rep TI plot, TI_mean_bin+TI_sd_bin*1.28', ylable='Rep TI')
 #     # plt.figure.savefig('./{}_rep_TIplot.png'.format(projectname))
 
-def get_regression_sm(x,y):
-    # get the linear least squares fit, this uses statsmodel which needs to be installed outside of Anaconda
-    x = sm_api.add_constant(x)
-    model = sm_api.OLS(y,x,missing='drop').fit()
-    result = model.params
-    result['Rsquared'] = model.rsquared
-    result['WSdiff'] = abs((x.iloc[:,1]-y).mean())
-    return [result[1], result[0], result[2], result[3]]
+#def get_regression_sm(x,y):
+#    # get the linear least squares fit, this uses statsmodel which needs to be installed outside of Anaconda
+#    x = sm_api.add_constant(x)
+#    model = sm_api.OLS(y,x,missing='drop').fit()
+#    result = model.params
+#    result['Rsquared'] = model.rsquared
+#    result['WSdiff'] = abs((x.iloc[:,1]-y).mean())
+#    return [result[1], result[0], result[2], result[3]]
 
 def get_regression(x,y):
     # get the linear least squaes fit, this uses the sklearn model which is in Anaconda already.  
