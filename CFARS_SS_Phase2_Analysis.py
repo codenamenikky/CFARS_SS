@@ -111,9 +111,9 @@ def get_inputdata(filename, config_file):
     #  the formatting information of the data is provided in the config file, the config file template is in the git hub repo
 
     if filename.split('.')[-1] == 'csv':
-        inputdata = pd.read_csv(filename)  
+        inputdata = pd.read_csv(filename,dtype = 'float64')  
     elif filename.split('.')[-1] == 'xlsx':
-        inputdata = pd.read_excel(filename)
+        inputdata = pd.read_excel(filename, dtype = 'float64')
     else:
         print('Unkown input file type for the input data , please consider changing it to csv')
         sys.exit()
@@ -180,6 +180,7 @@ def get_modelRegression(inputdata, column1, column2):
     slope = regr.coef_[0]
     intercept = regr.intercept_
     predict = regr.predict(x)
+    y = y.astype(np.float)
     r = np.corrcoef(x, y)[0, 1]
     r2 = r2_score(x, predict)  # coefficient of determination, explained variance
     mse = mean_squared_error(x, predict, multioutput='raw_values')
@@ -255,13 +256,13 @@ def perform_eon_correction(inputdata):
             inputdata.at[i,'CorrectedSD_Eon'] = inputdata.at[i,'CorrectedSD_Eon']
         elif inputdata.at[i,'RSD_WS'] >= 4 and inputdata.at[i,'RSD_WS'] <8:
             sigW = inputdata.at[i, 'CorrectedSD_Eon']
-            inputdata.at[i, 'CorrectedSD_Eon'] = (sigW * 1.116763 + .024685) - (.029 *(sigW * 1.116763 + .024685))
+            inputdata.at[i, 'CorrectedSD_Eon'] = (sigW * 1.116763 + .024685) - (.00029 *(sigW * 1.116763 + .024685))
         elif inputdata.at[i,'RSD_WS'] >= 8 and inputdata.at[i,'RSD_WS'] <12:
             sigW = inputdata.at[i, 'CorrectedSD_Eon']
-            inputdata.at[i, 'CorrectedSD_Eon'] = (sigW * 1.064564 + .040596) - (-.161 *(sigW * 1.064564 + .040596))
+            inputdata.at[i, 'CorrectedSD_Eon'] = (sigW * 1.064564 + .040596) - (-.00161 *(sigW * 1.064564 + .040596))
         elif inputdata.at[i, 'RSD_WS'] >= 12 and inputdata.at[i, 'RSD_WS'] < 16:
             sigW = inputdata.at[i, 'CorrectedSD_Eon']
-            inputdata.at[i, 'CorrectedSD_Eon'] = (sigW * .97865 + .124371) - (-.093 * (sigW * .97865 + .124371))
+            inputdata.at[i, 'CorrectedSD_Eon'] = (sigW * .97865 + .124371) - (-.00093 * (sigW * .97865 + .124371))
         else:
             inputdata.at[i,'CorrectedSD_Eon'] = inputdata.at[i,'CorrectedSD_Eon']
     inputdata['corrTI_RSD_TI'] = inputdata['CorrectedSD_Eon']/inputdata['RSD_WS']
