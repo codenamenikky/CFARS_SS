@@ -111,9 +111,9 @@ def get_inputdata(filename, config_file):
     #  the formatting information of the data is provided in the config file, the config file template is in the git hub repo
 
     if filename.split('.')[-1] == 'csv':
-        inputdata = pd.read_csv(filename,dtype = 'float64')  
+        inputdata = pd.read_csv(filename)  
     elif filename.split('.')[-1] == 'xlsx':
-        inputdata = pd.read_excel(filename, dtype = 'float64')
+        inputdata = pd.read_excel(filename)
     else:
         print('Unkown input file type for the input data , please consider changing it to csv')
         sys.exit()
@@ -958,4 +958,3 @@ if __name__ == '__main__':
     write_all_resultstofile(reg_results, allTIRegressResults, TI_MBEList,TI_DiffList, TI_RMSEList,rep_TI_resultsList,\
                             TIBinList, countList, total_StatsList, results_filename,\
                             lm_CorrList, correctionTag, siteMetadata, filterMetadata)
-
