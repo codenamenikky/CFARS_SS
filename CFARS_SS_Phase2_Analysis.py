@@ -249,23 +249,23 @@ def perform_eon_correction(inputdata):
     # subtract bias from the now corrected RSD for each speed range
     # Calculate TI using corrected sigmaRSD
 
-    inputdata['CorrectedSD_Eon'] = inputdata['RSD_SD']
+    inputdata['CorrectedSD_Eon_fixed'] = inputdata['RSD_SD']
 
     for i in inputdata.index:
         if inputdata.at[i,'RSD_WS'] <4:
-            inputdata.at[i,'CorrectedSD_Eon'] = inputdata.at[i,'CorrectedSD_Eon']
+            inputdata.at[i,'CorrectedSD_Eon_fixed'] = inputdata.at[i,'CorrectedSD_Eon_fixed']
         elif inputdata.at[i,'RSD_WS'] >= 4 and inputdata.at[i,'RSD_WS'] <8:
-            sigW = inputdata.at[i, 'CorrectedSD_Eon']
-            inputdata.at[i, 'CorrectedSD_Eon'] = (sigW * 1.116763 + .024685) - (.00029 *(sigW * 1.116763 + .024685))
+            sigW = inputdata.at[i, 'CorrectedSD_Eon_fixed']
+            inputdata.at[i, 'CorrectedSD_Eon_fixed'] = (sigW * 1.116763 + .024685) - (.00029 *(sigW * 1.116763 + .024685))
         elif inputdata.at[i,'RSD_WS'] >= 8 and inputdata.at[i,'RSD_WS'] <12:
-            sigW = inputdata.at[i, 'CorrectedSD_Eon']
-            inputdata.at[i, 'CorrectedSD_Eon'] = (sigW * 1.064564 + .040596) - (-.00161 *(sigW * 1.064564 + .040596))
+            sigW = inputdata.at[i, 'CorrectedSD_Eon_fixed']
+            inputdata.at[i, 'CorrectedSD_Eon_fixed'] = (sigW * 1.064564 + .040596) - (-.00161 *(sigW * 1.064564 + .040596))
         elif inputdata.at[i, 'RSD_WS'] >= 12 and inputdata.at[i, 'RSD_WS'] < 16:
-            sigW = inputdata.at[i, 'CorrectedSD_Eon']
-            inputdata.at[i, 'CorrectedSD_Eon'] = (sigW * .97865 + .124371) - (-.00093 * (sigW * .97865 + .124371))
+            sigW = inputdata.at[i, 'CorrectedSD_Eon_fixed']
+            inputdata.at[i, 'CorrectedSD_Eon_fixed'] = (sigW * .97865 + .124371) - (-.00093 * (sigW * .97865 + .124371))
         else:
-            inputdata.at[i,'CorrectedSD_Eon'] = inputdata.at[i,'CorrectedSD_Eon']
-    inputdata['corrTI_RSD_TI'] = inputdata['CorrectedSD_Eon']/inputdata['RSD_WS']
+            inputdata.at[i,'CorrectedSD_Eon_fixed'] = inputdata.at[i,'CorrectedSD_Eon_fixed']
+    inputdata['corrTI_RSD_TI'] = inputdata['CorrectedSD_Eon_fixed']/inputdata['RSD_WS']
 
     return inputdata
 
